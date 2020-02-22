@@ -155,8 +155,8 @@ int displaySMTick (int state) {
 
 int main(void) {
 	DDRB = 0xFF; PORTB = 0x00;
-	DDRA = 0x00; PORTA = 0xFF;
-	DDRC = 0xF0; PORTC = 0x0F;
+	DDRA = 0xF0; PORTA = 0x0F;
+
 	//LCD_init();
 	
 	static task task1; //task2, task3, task4;

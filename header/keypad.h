@@ -3,8 +3,8 @@
 
 #include <bit.h>
 
-#define KEYPADPORT PORTC
-#define KEYPADPIN  PINC
+#define KEYPADPORT PORTA
+#define KEYPADPIN  PINA
 #define ROW1 0
 #define ROW2 1
 #define ROW3 2
