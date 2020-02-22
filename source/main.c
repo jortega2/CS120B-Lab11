@@ -8,11 +8,48 @@
  *	code, is my own original work.
  */
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #include "io.h"
 #include "keypad.h"
 #endif
+
+unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms. 
+unsigned long _avr_timer_cntcurr = 0;
+
+void TimerOn(){
+
+TCCR1B = 0x0B;
+
+OCR1A = 125; 
+
+TIMSK1 = 0x02;
+
+TCNT1 = 0;
+
+_avr_timer_cntcurr = _avr_timer_M;
+
+SREG |= 0x80;
+}
+
+void TimerOff(){
+	TCCR1B = 0x00; // bit3bit1bit0: timer off
+
+}
+
+void TimerISR(){
+	TimerFlag = 1;
+}
+
+ISR(TIMER1_COMPA_vect){
+	_avr_timer_cntcurr--;
+	if(_avr_timer_cntcurr == 0){
+		TimerISR();
+		_avr_timer_cntcurr = _avr_timer_M;
+	
+	}
+}
 
 typedef struct _tast {
 	signed char state;
@@ -24,6 +61,22 @@ typedef struct _tast {
 unsigned char led0_output = 0x00;
 unsigned char led1_output = 0x00;
 unsigned char pause = 0;
+
+unsigned long int findGCD(unsigned long int a, unsigned long int b){
+        unsigned long int c;
+        while(1){
+                c = a%b;
+                if(c==0){return b;}
+                a = b;
+                b = c;
+        }
+        return 0;
+}
+
+unsigned long GCD = tasks[0]->period;
+for (i = 1; i < numTasks; i++) {
+        GCD = findGCD(GCD,tasks[i]->period);
+}
 
 enum pauseButtonSM_States {pauseButton_wait, pauseButton_press, pauseButton_release};
 
@@ -125,13 +178,12 @@ unsigned char ScanKeypad(){
 	
 
 int main(void) {
-    /* Insert DDR and PORT initializations */
 	//unsigned char x;
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRA = 0x00; PORTA = 0xFF;
 	//DDRC = 0xF0; PORTC = 0x0F;
 	//LCD_init();
-    /* Insert your solution below */	
+	
 	static _task, task1, tas2, task3, task4;
 	task1.state = start;
 	task1.period = 50;
@@ -153,7 +205,7 @@ int main(void) {
         task4.elapsedTime = task4.period;
         task4.TickFct = &displaySMTick;
 	
-	TimerSet(/*GCD*/);
+	TimerSet(10);
 	TimerOn;
 	
 	unsigned short i;
@@ -163,7 +215,7 @@ int main(void) {
 			task[i]->state = tasks[i]->TickFct(tasks[i]->state);
 			tasks[i]->elapsedTime = 0;
 		}
-		tasks[i]->elapsedTime += /*GCD*/;
+		tasks[i]->elapsedTime += 10;
 	}	
 	while(!TimerFlag);
 	TimerFlag = 0;
