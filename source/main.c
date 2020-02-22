@@ -20,6 +20,11 @@ volatile unsigned char TimerFlag = 0;
 unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms. 
 unsigned long _avr_timer_cntcurr = 0;
 
+void TimerSet(unsigned long M) {
+	_avr_timer_M = M;
+	_avr_timer_cntcurr = _avr_timer_M;
+}
+
 void TimerOn(){
 
 TCCR1B = 0x0B;
@@ -53,7 +58,7 @@ ISR(TIMER1_COMPA_vect){
 	}
 }
 
-typedef struct _task {
+typedef struct task {
 	signed char state;
 	unsigned long int period;
 	unsigned long int elapsedTime;
@@ -170,36 +175,38 @@ int main(void) {
 	//DDRC = 0xF0; PORTC = 0x0F;
 	//LCD_init();
 	
-	static _task task1, tas2, task3, task4;
-	_task *tasks[] = { &task1, &task2, &task3, &task4 };
-	task1.state = start;
+	static task task1, task2, task3, task4;
+        task *tasks[] = { &task1, &task2, &task3, &task4 };
+	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
+	
+	task1.state = pauseButton_wait;
 	task1.period = 50;
 	task1.elapsedTime = task1.period;
-	task1.TickFct = &pauseButtonToggleSMTick;
+	task1.TickFct = &pauseButtonSMTick;
 
-	task2.state = start;
+	task2.state = toggleLED0_wait;
         task2.period = 500;
         task2.elapsedTime = task2.period;
         task2.TickFct = &toggleLED0SMTick;
 	
-	task3.state = start;
+	task3.state = toggleLED0_wait;
         task3.period = 1000;
         task3.elapsedTime = task3.period;
         task3.TickFct = &toggleLED1SMTick;
 
-	task4.state = start;
+	task4.state = display_display;
         task4.period = 10;
         task4.elapsedTime = task4.period;
         task4.TickFct = &displaySMTick;
 	
 	TimerSet(10);
-	TimerOn;
+	TimerOn();
 	
 	unsigned short i;
     while (1) {
 	for (i = 0; i < numTasks; i++ ) {
 		if (tasks[i]->elapsedTime == tasks[i]->period){
-			task[i]->state = tasks[i]->TickFct(tasks[i]->state);
+			tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
 			tasks[i]->elapsedTime = 0;
 		}
 		tasks[i]->elapsedTime += 10;
