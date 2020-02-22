@@ -15,6 +15,8 @@
 #include "keypad.h"
 #endif
 
+volatile unsigned char TimerFlag = 0;
+
 unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms. 
 unsigned long _avr_timer_cntcurr = 0;
 
@@ -51,7 +53,7 @@ ISR(TIMER1_COMPA_vect){
 	}
 }
 
-typedef struct _tast {
+typedef struct _task {
 	signed char state;
 	unsigned long int period;
 	unsigned long int elapsedTime;
@@ -61,22 +63,6 @@ typedef struct _tast {
 unsigned char led0_output = 0x00;
 unsigned char led1_output = 0x00;
 unsigned char pause = 0;
-
-unsigned long int findGCD(unsigned long int a, unsigned long int b){
-        unsigned long int c;
-        while(1){
-                c = a%b;
-                if(c==0){return b;}
-                a = b;
-                b = c;
-        }
-        return 0;
-}
-
-unsigned long GCD = tasks[0]->period;
-for (i = 1; i < numTasks; i++) {
-        GCD = findGCD(GCD,tasks[i]->period);
-}
 
 enum pauseButtonSM_States {pauseButton_wait, pauseButton_press, pauseButton_release};
 
@@ -102,7 +88,7 @@ int pauseButtonSMTick (int state) {
 	return state;
 }
 
-enum toggleLED0_States {toggleLED0_wait, toggleLED0)blink };
+enum toggleLED0_States {toggleLED0_wait, toggleLED0_blink };
 
 int toggleLED0SMTick(int state) {
 	switch (state) {
@@ -136,7 +122,7 @@ int toggleLED1SMTick (int state) {
 		return state;
 }
 
-enum display_States (display_display );
+enum display_States {display_display };
 
 int displaySMTick (int state) {
 		unsigned char output;
@@ -184,7 +170,8 @@ int main(void) {
 	//DDRC = 0xF0; PORTC = 0x0F;
 	//LCD_init();
 	
-	static _task, task1, tas2, task3, task4;
+	static _task task1, tas2, task3, task4;
+	_task *tasks[] = { &task1, &task2, &task3, &task4 };
 	task1.state = start;
 	task1.period = 50;
 	task1.elapsedTime = task1.period;
@@ -244,3 +231,4 @@ int main(void) {
     }
     return 1;
 }
+
