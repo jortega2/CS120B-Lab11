@@ -69,9 +69,9 @@ unsigned char led0_output = 0x00;
 unsigned char led1_output = 0x00;
 unsigned char pause = 0;
 
-enum getButton {getButtonSystem};
+/*enum getButton {getButtonSystem};
 
-int pauseButtonSMTick (int state) {
+int keyPad (int state) {
 	switch (state) {
 		case getButtonSystem : {
 		unsigned char x;
@@ -99,21 +99,24 @@ int pauseButtonSMTick (int state) {
 		}
 	}
 	return state;
-}
+}*/
 
-/*enum toggleLED0_States {toggleLED0_wait, toggleLED0_blink };
+enum legendary {wait, write};
 
-int toggleLED0SMTick(int state) {
+int legendary_Tick(int state) {
 	switch (state) {
-		case toggleLED0_wait: state = !pause? toggleLED0_blink: toggleLED0_wait; break;
-		case toggleLED0_blink: state = pause? toggleLED0_wait: toggleLED0_blink; break;
-		default: state = toggleLED0_wait; break;
-	}
-	switch (state) {
-		case toggleLED0_wait: break;
-		case toggleLED0_blink:
-			led0_output = (led0_output == 0x00) ? 0x01 : 0x00;
-			break;
+		case wait:
+			LCD_ClearScreen();
+			if ((~PINA & 0x01) == 1){
+				state = write;
+			} else  {
+				state = wait;
+			}
+		break;
+		case write:
+			LCD_WriteData("CS120B is Legend... wait for it DARY!");
+			state = write;
+		break;
 	}
 	return state;
 }
@@ -159,21 +162,21 @@ int main(void) {
 	DDRC = 0xF0; PORTC = 0x0F;
 	//LCD_init();
 	
-	static task task1; //task2, task3, task4;
-        task *tasks[] = { &task1};//, &task2, &task3, &task4 };
+	static task task2; //task2, task3, task4;
+        task *tasks[] = { &task2};//, &task2, &task3, &task4 };
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 	
-	task1.state = getButtonSystem;
+	/*task1.state = getButtonSystem;
 	task1.period = 50;
 	task1.elapsedTime = task1.period;
-	task1.TickFct = &pauseButtonSMTick;
+	task1.TickFct = &keyPad;*/
 
-	/*task2.state = toggleLED0_wait;
+	task2.state = wait;
         task2.period = 500;
         task2.elapsedTime = task2.period;
-        task2.TickFct = &toggleLED0SMTick;
+        task2.TickFct = &legendary_tick;
 	
-	task3.state = toggleLED0_wait;
+	/*task3.state = toggleLED0_wait;
         task3.period = 1000;
         task3.elapsedTime = task3.period;
         task3.TickFct = &toggleLED1SMTick;
