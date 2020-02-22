@@ -8,10 +8,10 @@
  *	code, is my own original work.
  */
 #include <avr/io.h>
+#include "io.h"
 #include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
-#include "io.h"
 #include "keypad.h"
 #endif
 
@@ -101,27 +101,116 @@ int keyPad (int state) {
 	return state;
 }*/
 
-enum legendary {wait, write};
+enum legendary {wait, press, write};
 
 int legendary_Tick(int state) {
+	static unsigned char cnt;
 	switch (state) {
 		case wait:
+			cnt = 0;
+			PORTB = 0x01;
 			LCD_ClearScreen();
 			if ((~PINA & 0x01) == 1){
-				state = write;
+				state = press;
 			} else  {
 				state = wait;
 			}
 		break;
+		case press:
+			PORTB = 0x02;
+			if ((~PINA & 0x01) == 1){
+				state = press;
+			} else {
+			state = write;
+			}
+		break;
 		case write:
-			LCD_WriteData("CS120B is Legend... wait for it DARY!");
+			PORTB = 0x04;	
 			state = write;
 		break;
 	}
+	switch (state) {
+		case wait:
+			LCD_ClearScreen();
+			break;
+		case press:
+			break;
+		case write:
+			cnt++;	
+			if (cnt == 1) {
+				LCD_ClearScreen();
+				LCD_DisplayString(1, "CS120B is Legend");
+			}else if (cnt == 2) {
+				LCD_ClearScreen();
+				LCD_DisplayString(1, "S120B is Legend.");
+			}else if (cnt == 3) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "120B is Legend..");
+                        }else if (cnt == 4) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "20B is Legend...");
+                        }else if (cnt == 5) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "0B is Legend... ");
+                        }else if (cnt == 6) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "B is Legend... w");
+                        }else if (cnt == 7) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, " is Legend... wa");
+                        }else if (cnt == 8) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "is Legend... wai");
+                        }else if (cnt == 9) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "s Legend... wait");
+                        }else if (cnt == 10) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, " Legend... wait ");
+                        }else if (cnt == 11) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "Legend... wait f");
+                        }else if (cnt == 12) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "egend... wait fo");
+                        }else if (cnt == 13) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "gend... wait for");
+                        }else if (cnt == 14) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "end... wait for ");
+                        }else if (cnt == 15) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "nd... wait for i");
+                        }else if (cnt == 16) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "d... wait for it");
+                        }else if (cnt == 17) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "... wait for it ");
+                        }else if (cnt == 18) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, ".. wait for it D");
+                        }else if (cnt == 19) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, ". wait for it DA");
+                        }else if (cnt == 20) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, " wait for it DAR");
+                        }else if (cnt == 21) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "wait for it DARY");
+                        }else if (cnt == 22) {
+                                LCD_ClearScreen();
+                                LCD_DisplayString(1, "ait for it DARY!");
+                        }
+			break;
+	}
+			
 	return state;
 }
 
-enum toggleLED1_States {toggleLED1_wait, toggleLED1_blink };
+/*enum toggleLED1_States {toggleLED1_wait, toggleLED1_blink };
 
 int toggleLED1SMTick (int state) {
 		switch (state) {
@@ -159,8 +248,9 @@ int displaySMTick (int state) {
 int main(void) {
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRA = 0x00; PORTA = 0xFF;
-	DDRC = 0xF0; PORTC = 0x0F;
-	//LCD_init();
+	DDRC = 0xFF; PORTC = 0x00;
+	DDRD = 0xFF; PORTD = 0x00;
+	LCD_init();
 	
 	static task task2; //task2, task3, task4;
         task *tasks[] = { &task2};//, &task2, &task3, &task4 };
@@ -174,7 +264,7 @@ int main(void) {
 	task2.state = wait;
         task2.period = 500;
         task2.elapsedTime = task2.period;
-        task2.TickFct = &legendary_tick;
+        task2.TickFct = &legendary_Tick;
 	
 	/*task3.state = toggleLED0_wait;
         task3.period = 1000;
